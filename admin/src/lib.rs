@@ -14,6 +14,7 @@ pub mod linter;
 pub mod list_versions;
 pub mod osv_export;
 pub mod prelude;
+pub mod updater;
 pub mod web;
 
 use std::collections::BTreeMap as Map;
