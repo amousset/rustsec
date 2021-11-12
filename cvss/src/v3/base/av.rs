@@ -19,7 +19,7 @@ use std::{fmt, str::FromStr};
 /// > from across a network is larger than the number of potential attackers
 /// > that could exploit a vulnerability requiring physical access to a device,
 /// > and therefore warrants a greater Base Score.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub enum AttackVector {
     /// Physical (P)
     ///

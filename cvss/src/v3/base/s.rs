@@ -33,7 +33,7 @@ use std::{fmt, str::FromStr};
 /// > database users and associated database privileges.
 /// >
 /// > The Base Score is greatest when a scope change occurs.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub enum Scope {
     /// Unchanged (U)
     ///

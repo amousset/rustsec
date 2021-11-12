@@ -22,7 +22,7 @@ use std::{fmt, str::FromStr};
 /// > bandwidth, processor cycles, or disk space all impact the availability
 /// > of an impacted component. The Base Score is greatest when the
 /// > consequence to the impacted component is highest.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub enum Availability {
     /// None (N)
     ///

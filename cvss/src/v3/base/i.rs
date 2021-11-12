@@ -15,7 +15,7 @@ use std::{fmt, str::FromStr};
 /// > vulnerability. Integrity refers to the trustworthiness and veracity of
 /// > information. The Base Score is greatest when the consequence to the
 /// > impacted component is highest.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub enum Integrity {
     /// None (N)
     ///

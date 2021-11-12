@@ -14,7 +14,7 @@ use std::{fmt, str::FromStr};
 /// > This metric describes the level of privileges an attacker must possess
 /// > *before* successfully exploiting the vulnerability. The Base Score is
 /// > greatest if no privileges are required.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub enum PrivilegesRequired {
     /// High (H)
     ///

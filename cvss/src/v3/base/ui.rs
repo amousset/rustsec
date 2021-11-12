@@ -17,7 +17,7 @@ use std::{fmt, str::FromStr};
 /// > exploited solely at the will of the attacker, or whether a separate user
 /// > (or user-initiated process) must participate in some manner.
 /// > The Base Score is greatest when no user interaction is required.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub enum UserInteraction {
     /// Required (R)
     ///

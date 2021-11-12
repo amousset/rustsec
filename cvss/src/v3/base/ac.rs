@@ -21,7 +21,7 @@ use std::{fmt, str::FromStr};
 /// > succeed, the Base metrics should be scored assuming the vulnerable
 /// > component is in that configuration. The Base Score is greatest for the
 /// > least complex attacks.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub enum AttackComplexity {
     /// High (H)
     ///

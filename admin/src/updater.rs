@@ -1,8 +1,9 @@
 //! RustSec Advisory DB tool to update advisory data
 
 use crate::prelude::*;
-use rustsec::collection::Collection;
+use std::collections::HashSet;
 use std::{path::Path, process::exit, thread::sleep, time::Duration};
+use url::Url;
 
 // Goals:
 // * update existing data
@@ -25,7 +26,7 @@ use std::{path::Path, process::exit, thread::sleep, time::Duration};
 const NVD_API_URL: &str = "https://services.nvd.nist.gov/rest/json/cve/1.0";
 // minimal sleep between call to the API to comply wit rate-limiting
 // value found by trial and error
-const NVD_API_SLEEP_MS: u64 = 150;
+const NVD_API_SLEEP_MS: u64 = 200;
 
 /// What sort of output should be generated on stdout.
 #[derive(PartialEq, Clone, Copy)]
@@ -67,56 +68,113 @@ pub fn update_advisories(repo_path: &Path, output_mode: OutputMode) {
     for advisory in advisories {
         let advisory_clone = advisory.clone();
         let metadata = advisory_clone.metadata;
-        let id = metadata.id;
-        println!("{}", id);
+        let advisory_id = metadata.id;
+        //println!("{}", advisory_id);
 
         // Look for an existing CVE id
         let cve_ids = metadata
             .aliases
             .iter()
-            .chain(std::iter::once(&id))
+            .chain(std::iter::once(&advisory_id))
             .filter(|alias| alias.kind() == rustsec::advisory::id::Kind::CVE);
 
-        // FIXME store new and different cvss scores
-        // build an array and AFTER
-
-        let mut nvd_scores: Vec<cvss::v3::Base> = vec![];
-        let mut _references: Vec<String> = vec![];
+        let mut nvd_scores: HashSet<cvss::v3::Base> = HashSet::new();
+        let mut references: Vec<Url> = vec![];
         let mut broken_cve_aliases: Vec<rustsec::advisory::id::Id> = vec![];
-
         for id in cve_ids {
-            match fetch_cve(id) {
+            let info = fetch_cve(id);
+
+            match info {
                 Ok(Some(CveInfo {
-                    cvss: Some(nvd_cvss),
+                    cvss: Some(ref nvd_cvss),
                     references: _,
-                })) => nvd_scores.push(nvd_cvss),
+                })) => {
+                    let _ = nvd_scores.insert(nvd_cvss.clone());
+                }
                 Ok(_) => (),
                 Err(_) => broken_cve_aliases.push(id.clone()),
             }
-        }
 
-        nvd_scores.sort();
-        nvd_scores.dedup();
+            match info {
+                Ok(Some(CveInfo {
+                    cvss: _,
+                    references: nvd_references,
+                })) => {
+                    references.append(&mut nvd_references.clone());
+                }
+                _ => (),
+            }
+        }
 
         for broken_alias in broken_cve_aliases {
-            println!("Broken alias for {}: {}", id, broken_alias);
+            println!("Broken alias for {}: {}", advisory_id, broken_alias);
         }
 
-        if let Some(ref _current_cvss) = advisory.metadata.cvss {}
-    }
+        // Try to extract ghsa ids from references
+        // to add it is missing
+        let mut ghsa_ids: Vec<rustsec::advisory::id::Id> = vec![];
+        for reference in references {
+            let s_ref = reference.as_str();
 
-    let mut collection_strs = vec![];
-    let crates_str = Collection::Crates.to_string();
-    let rust_str = Collection::Rust.to_string();
-    collection_strs.push(crates_str);
-    collection_strs.push(rust_str);
+            if s_ref.contains("rustsec")
+                || s_ref.contains("https://crates.io")
+                || s_ref.contains("RustSec")
+                || s_ref.contains("RUSTSEC-")
+            {
+                continue;
+            }
+
+            if s_ref.contains("GHSA-") {
+                let begin = s_ref.find("GHSA-").unwrap();
+                let ghsa = &s_ref[begin..begin + 19];
+                ghsa_ids.push(ghsa.parse().unwrap());
+                continue;
+            }
+
+            let mut complete_references = advisory.metadata.references.clone();
+            if let Some(u) = advisory.metadata.url.as_ref() {
+                complete_references.push(u.clone());
+            }
+            if complete_references
+                .iter()
+                .find(|u| **u == reference)
+                .is_none()
+            {
+                println!("Missing reference for {}: {}", advisory_id, reference);
+            }
+        }
+
+        for ghsa_id in ghsa_ids {
+            if !advisory.metadata.aliases.contains(&ghsa_id) {
+                // FIXME check if they are really Rust advisories
+                println!("New {} alias for {}", ghsa_id, advisory_id);
+            }
+        }
+
+        if nvd_scores.len() == 1 {
+            let nvd_score = nvd_scores.iter().next().unwrap();
+            if let Some(ref current_cvss) = advisory.metadata.cvss {
+                if current_cvss != nvd_score {
+                    println!("Potential cvss update for {}: {}", advisory_id, nvd_score)
+                }
+            } else {
+                println!("Add cvss for {}: {}", advisory_id, nvd_score);
+            }
+        } else if nvd_scores.len() > 1 {
+            println!(
+                "Inconsistency: {} cvss values for {}",
+                nvd_scores.len(),
+                advisory_id
+            );
+        }
+    }
 }
 
 // Interesting parts of NVD data
 #[derive(Debug)]
 struct CveInfo {
     cvss: Option<cvss::v3::Base>,
-    references: Vec<String>,
+    references: Vec<Url>,
 }
 
 fn fetch_cve(id: &rustsec::advisory::id::Id) -> Result<Option<CveInfo>, ()> {
@@ -126,18 +184,21 @@ fn fetch_cve(id: &rustsec::advisory::id::Id) -> Result<Option<CveInfo>, ()> {
     if response.status() == 404 {
         return Ok(None);
     }
-
     let body = response.into_string().map_err(|_| ())?;
 
-    // FIXME special handling of 404 as it meaningful
-
     let data: serde_json::Value = serde_json::from_str(&body).unwrap();
-
     let cvss = data["result"]["CVE_Items"][0]["impact"]["baseMetricV3"]["cvssV3"]["vectorString"]
         .as_str()
         .and_then(|s| s.parse().ok());
 
-    let references = vec![];
+    let mut references = vec![];
+    let r_references = data["result"]["CVE_Items"][0]["cve"]["references"]["reference_data"]
+        .as_array()
+        .unwrap();
+    for r_ref in r_references {
+        let url = Url::parse(r_ref["url"].as_str().unwrap()).unwrap();
+        references.push(url);
+    }
 
     sleep(Duration::from_millis(NVD_API_SLEEP_MS));
     Ok(Some(CveInfo { cvss, references }))

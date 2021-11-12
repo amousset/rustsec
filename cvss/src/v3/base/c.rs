@@ -17,7 +17,7 @@ use std::{fmt, str::FromStr};
 /// > disclosure to only authorized users, as well as preventing access by, or
 /// > disclosure to, unauthorized ones. The Base Score is greatest when the loss
 /// > to the impacted component is highest.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub enum Confidentiality {
     /// None (N)
     ///

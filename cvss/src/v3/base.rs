@@ -47,7 +47,7 @@ pub use self::{
 /// > resource. This potential for measuring the impact of a vulnerability other
 /// > than the vulnerable component, was a key feature introduced with
 /// > CVSS v3.0. This property is captured by the Scope metric.
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Base {
     /// Minor component of the version
     pub minor_version: usize,
