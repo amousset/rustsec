@@ -13,8 +13,10 @@ use std::str::FromStr;
 use std::{
     fs::{self, File},
     path::{Path, PathBuf},
+    convert::TryFrom,
 };
 use xml::escape::escape_str_attribute;
+use serde::Serialize;
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -339,6 +341,9 @@ pub fn render_advisories(output_folder: PathBuf) {
         min_feed_len
     };
     render_feed(&feed_path, &advisories[..len]);
+    let index_path = output_folder.join("index.st");
+    let index_input_path = output_folder.join("advisories");
+    render_index(&index_input_path , &index_path, &advisories);
     status_ok!("Rendered", "{}", feed_path.display());
     status_ok!("Completed", "{} advisories rendered in atom feed", len);
 }
@@ -359,6 +364,56 @@ fn title_type(advisory: &rustsec::Advisory) -> String {
         // Not informational => vulnerability
         None => format!("{}: Vulnerability in {}", id, package),
     }
+}
+
+#[derive(Serialize, Debug)]
+struct SearchConfig {
+    input: InputConfig,
+}
+
+#[derive(Serialize, Debug)]
+struct InputConfig {
+    base_directory: PathBuf,
+    url_prefix: String,
+    break_on_file_error: bool,
+    files: Vec<FileEntry>,
+}
+
+#[derive(Serialize, Debug)]
+struct FileEntry {
+    path: PathBuf,
+    url: String,
+    title: String,
+}
+
+/// Render search index
+fn render_index(input_dir: &Path, output_path: &Path, advisories: &[rustsec::Advisory]) {
+    let mut files = vec![];
+    for adv in advisories {
+        let html = PathBuf::from(adv.metadata.id.as_str()).with_extension("html");
+        let file = FileEntry {
+            path: html.clone(),
+            url: html.to_string_lossy().to_string(),
+            title: adv.title().to_owned(),
+        };
+        files.push(file);
+    }
+
+    let input = InputConfig {
+        base_directory: input_dir.to_owned(),
+        url_prefix: "/advisories/".to_string(),
+        files,
+        break_on_file_error: true,
+    };
+    let config = SearchConfig {
+        input,
+    };
+    // stork only accepts a toml string as input, let's build it
+    let toml = toml::to_string(&config).unwrap();
+    println!("{}", &toml);
+    let stork_config = stork_lib::Config::try_from(toml.as_str()).unwrap();
+    let index = stork_lib::build_index(&stork_config).unwrap();
+    fs::write(output_path, &index.bytes).unwrap();
 }
 
 /// Renders an Atom feed of advisories
