@@ -15,10 +15,16 @@ use std::{
     path::{Path, PathBuf},
 };
 use xml::escape::escape_str_attribute;
+use serde::Serialize;
+use rustsec::advisory::{Id, Keyword};
 
 #[derive(Template)]
 #[template(path = "index.html")]
 struct IndexTemplate;
+
+#[derive(Template)]
+#[template(path = "search.html")]
+struct SearchTemplate;
 
 #[derive(Template)]
 #[template(path = "advisories.html")]
@@ -109,6 +115,10 @@ pub fn render_advisories(output_folder: PathBuf) {
     // Render the index.html (/) page.
     let index_page = IndexTemplate.render().unwrap();
     fs::write(output_folder.join("index.html"), index_page).unwrap();
+
+    // Render the search.html page.
+    let search_page = SearchTemplate.render().unwrap();
+    fs::write(output_folder.join("search.html"), search_page).unwrap();
 
     // Render the advisories.html (/advisories) page.
 
@@ -315,6 +325,10 @@ pub fn render_advisories(output_folder: PathBuf) {
         advisories_per_category.len() + 1
     );
 
+    // Index
+    let index_path = output_folder.join("js").join("index.json");
+    render_index(&index_path, &advisories);
+
     // Feed
     let feed_path = output_folder.join("feed.xml");
     let min_feed_len = 10;
@@ -359,6 +373,35 @@ fn title_type(advisory: &rustsec::Advisory) -> String {
         // Not informational => vulnerability
         None => format!("{}: Vulnerability in {}", id, package),
     }
+}
+
+/// Index entry for lunr
+///
+/// We want to keep it small si that the index is small
+#[derive(Serialize)]
+struct IndexEntry {
+    ident: Id,
+    title: String,
+    aliases: Vec<Id>,
+    package: String,
+    keywords: Vec<Keyword>,
+}
+
+/// Renders the local search index
+fn render_index(output_path: &Path, advisories: &[rustsec::Advisory]) {
+    let mut index = vec![];
+    for advisory in advisories {
+        let entry = IndexEntry {
+            ident: advisory.id().to_owned(),
+            title: advisory.title().to_string(),
+            aliases: advisory.metadata.aliases.clone(),
+            package: advisory.metadata.package.to_string(),
+            keywords: advisory.metadata.keywords.clone(),
+        };
+        index.push(entry);
+    }
+    let json_index = serde_json::to_string(&index).unwrap();
+    fs::write(output_path, json_index).unwrap();
 }
 
 /// Renders an Atom feed of advisories
