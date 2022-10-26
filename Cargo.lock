@@ -430,16 +430,15 @@ checksum = "ea221b5284a47e40033bf9b66f35f984ec0ea2931eb03505246cd27a963f981b"
 
 [[package]]
 name = "crates-index"
-version = "0.16.7"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30905ea06bd8553b9cbb9ed5f7cbdae18159cc83b8ee3c7ca3c90f0128aa89cc"
+checksum = "7383a260c3a36f30f91c93c31dff3021c0d7142ef7179510237488b2c1b4e462"
 dependencies = [
  "git2",
- "glob",
  "hex",
  "home",
  "memchr",
- "semver 0.11.0",
+ "semver 1.0.3",
  "serde",
  "serde_derive",
  "serde_json",
@@ -777,12 +776,6 @@ dependencies = [
  "openssl-sys",
  "url",
 ]
-
-[[package]]
-name = "glob"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b919933a397b79c37e33b77bb2aa3dc8eb6e165ad809e58ff75bc7db2e34574"
 
 [[package]]
 name = "gumdrop"
