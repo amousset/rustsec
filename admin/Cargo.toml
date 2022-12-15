@@ -10,7 +10,7 @@ readme      = "README.md"
 edition     = "2018"
 
 [dependencies]
-abscissa_core = "0.5"
+abscissa_core = "0.7"
 crates-index = "0.16"
 gumdrop = "0.7"
 rustsec = { version = "0.24", path = "../rustsec", features = ["osv-I-know-this-is-unstable"] }
@@ -27,5 +27,5 @@ atom_syndication = "0.9"
 xml-rs = "0.8"
 
 [dev-dependencies]
-abscissa_core = { version = "0.5", features = ["testing"] }
+abscissa_core = { version = "0.7", features = ["testing"] }
 once_cell = "1.5"
