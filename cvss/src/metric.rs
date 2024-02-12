@@ -17,7 +17,7 @@ pub trait Metric: Copy + Clone + Debug + Display + Eq + FromStr + Ord {
         Self::TYPE.name()
     }
 
-    /// Get CVSS v3.1 score for this metric.
+    /// Get CVSS score for this metric.
     fn score(self) -> f64;
 
     /// Get `str` describing this metric's value
@@ -51,6 +51,15 @@ pub enum MetricType {
 
     /// User Interaction (UI)
     UI,
+
+    /// Exploit Code Maturity (E)
+    E,
+
+    /// Remediation Level (RL)
+    RL,
+
+    /// Report Confidence (RC)
+    RC,
 }
 
 impl MetricType {
@@ -65,6 +74,9 @@ impl MetricType {
             Self::PR => "PR",
             Self::S => "S",
             Self::UI => "UI",
+            Self::E => "E",
+            Self::RL => "RL",
+            Self::RC => "RC",
         }
     }
 
@@ -79,6 +91,9 @@ impl MetricType {
             Self::PR => "Privileges Required",
             Self::S => "Scope",
             Self::UI => "User Interaction",
+            Self::E => "Exploit Code Maturity",
+            Self::RL => "Remediation Level",
+            Self::RC => "Report Confidence",
         }
     }
 }
@@ -102,6 +117,9 @@ impl FromStr for MetricType {
             "PR" => Ok(Self::PR),
             "S" => Ok(Self::S),
             "UI" => Ok(Self::UI),
+            "E" => Ok(Self::E),
+            "RL" => Ok(Self::RL),
+            "RC" => Ok(Self::RL),
             _ => Err(Error::UnknownMetric { name: s.to_owned() }),
         }
     }

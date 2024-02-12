@@ -2,9 +2,8 @@
 //!
 //! <https://www.first.org/cvss/specification-document>
 
-// TODO(tarcieri): Environmental and Temporal Metrics
-
 pub mod base;
+pub mod temporal;
 
 mod score;
 

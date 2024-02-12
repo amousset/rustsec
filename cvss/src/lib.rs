@@ -14,7 +14,7 @@
 //!
 //! Serde support is available through the optional `serde` Cargo feature.
 //!
-//! [CVSS v3.1 Specification]: https://www.first.org/cvss/specification-document
+//! [CVSS v3.1 Specification]: https://www.first.org/cvss/v3.1/specification-document
 
 // TODO(tarcieri): other CVSS versions, CVSS v3.1 Temporal and Environmental Groups
 
