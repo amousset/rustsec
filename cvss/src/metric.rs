@@ -60,6 +60,15 @@ pub enum MetricType {
 
     /// Report Confidence (RC)
     RC,
+
+    /// Availability Requirement (AR)
+    AR,
+
+    /// Integrity Requirement (IR)
+    IR,
+
+    /// Confidentiality Requirement (CR)
+    CR,
 }
 
 impl MetricType {
@@ -77,6 +86,9 @@ impl MetricType {
             Self::E => "E",
             Self::RL => "RL",
             Self::RC => "RC",
+            Self::AR => "AR",
+            Self::IR => "IR",
+            Self::CR => "CR",
         }
     }
 
@@ -94,6 +106,9 @@ impl MetricType {
             Self::E => "Exploit Code Maturity",
             Self::RL => "Remediation Level",
             Self::RC => "Report Confidence",
+            Self::AR => "Availability Requirement",
+            Self::IR => "Integrity Requirement",
+            Self::CR => "Confidentiality Requirement",
         }
     }
 }
@@ -120,6 +135,9 @@ impl FromStr for MetricType {
             "E" => Ok(Self::E),
             "RL" => Ok(Self::RL),
             "RC" => Ok(Self::RL),
+            "AR" => Ok(Self::AR),
+            "IR" => Ok(Self::IR),
+            "CR" => Ok(Self::CR),
             _ => Err(Error::UnknownMetric { name: s.to_owned() }),
         }
     }
