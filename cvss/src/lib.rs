@@ -14,7 +14,8 @@
 //!
 //! Serde support is available through the optional `serde` Cargo feature.
 //!
-//! [CVSS v3.1 Specification]: https://www.first.org/cvss/specification-document
+//! [CVSS v3.1 Specification]: https://www.first.org/cvss/v3.1/specification-document
+//! [CVSS v4.0 Specification]: https://www.first.org/cvss/v4.0/specification-document
 
 // TODO(tarcieri): other CVSS versions, CVSS v3.1 Temporal and Environmental Groups
 
@@ -25,6 +26,8 @@ extern crate std;
 
 #[cfg(feature = "v3")]
 pub mod v3;
+#[cfg(feature = "v4")]
+pub mod v4;
 
 mod error;
 mod metric;
